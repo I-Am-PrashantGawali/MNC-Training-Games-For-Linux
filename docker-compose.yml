@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: mnc-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: mnc_training
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - mnc-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: mnc-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://admin:password123@mongodb:27017/mnc_training?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mongodb
+    networks:
+      - mnc-network
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./skill-quest-mnc-games-29-main
+      dockerfile: Dockerfile
+    container_name: mnc-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:5001/api
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mnc-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  mnc-network:
+    driver: bridge 

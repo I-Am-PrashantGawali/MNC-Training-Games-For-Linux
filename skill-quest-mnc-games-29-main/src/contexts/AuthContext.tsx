@@ -143,7 +143,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const API_URL = 'http://localhost:8000/api/auth';
+const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
